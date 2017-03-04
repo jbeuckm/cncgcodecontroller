@@ -1,0 +1,11 @@
+<component name="ArtifactManager">
+  <artifact type="jar" build-on-make="true" name="cncgcodecontroller:jar">
+    <output-path>$PROJECT_DIR$/out/artifacts/cncgcodecontroller_jar</output-path>
+    <root id="archive" name="cncgcodecontroller.jar">
+      <element id="module-output" name="cncgcodecontroller" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/jssc.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/nrjavaserial-3.9.3.jar" path-in-jar="/" />
+      <element id="extracted-dir" path="$PROJECT_DIR$/jssc-2.8.0-javadoc.jar" path-in-jar="/" />
+    </root>
+  </artifact>
+</component>

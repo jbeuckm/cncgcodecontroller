@@ -860,6 +860,7 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                             //Proping Done waiting for hit:
                             if(Communication.isSimulation() == false)
                             {
+                                Communication.send("G30");
                                 waitForTrigger(1000 * 60 * 10); //10min max
                             }
                             else{

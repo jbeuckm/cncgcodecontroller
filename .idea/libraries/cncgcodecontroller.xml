@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="cncgcodecontroller">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/jssc.jar!/" />
+      <root url="jar://$PROJECT_DIR$/nrjavaserial-3.9.3.jar!/" />
+      <root url="jar://$PROJECT_DIR$/jssc-2.8.0-javadoc.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>
