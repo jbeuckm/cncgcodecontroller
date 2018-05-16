@@ -857,14 +857,14 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                         
                         if(Arrays.asList(cmdpropeindex).contains(i))
                         {
-                            //Proping Done waiting for hit:
+                            //Probing Done waiting for hit:
                             if(Communication.isSimulation() == false)
                             {
                                 Communication.send("G30");
                                 waitForTrigger(1000 * 60 * 10); //10min max
                             }
                             else{
-                                waitForTrigger(100);
+                                waitForTrigger(10);
                                 hitvalue    = (new Random()).nextDouble();
                                 hit         = true; 
                                 pos         = true;
@@ -888,7 +888,9 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                                 break;
                             }                            
                             
-                            waitForTrigger(1000); //1s max
+                            if(Communication.isSimulation() == false) {
+                                waitForTrigger(1000); //1s max
+                            }
 
                             if(pos == false)
                             {
