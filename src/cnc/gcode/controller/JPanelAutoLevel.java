@@ -127,17 +127,17 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                 }                g2.translate(-data.jpw / 2, -data.jph / 2);
                 
                 //Display Position
-                double ariawidth    = DatabaseV2.WORKSPACE0.getsaved(); //x
-                double ariaheight   = DatabaseV2.WORKSPACE1.getsaved(); //y
-                Rectangle rect      = Geometrics.placeRectangle(data.jpw, data.jph, Geometrics.getRatio(ariawidth,ariaheight));
-                double scalex       = rect.width/ariawidth;
-                double scaley       = rect.height/ariaheight;
+                double areaWidth    = DatabaseV2.WORKSPACE0.getsaved(); //x
+                double areaHeight   = DatabaseV2.WORKSPACE1.getsaved(); //y
+                Rectangle rect      = Geometrics.placeRectangle(data.jpw, data.jph, Geometrics.getRatio(areaWidth,areaHeight));
+                double scalex       = rect.width/areaWidth;
+                double scaley       = rect.height/areaHeight;
                 g2.translate(rect.x, rect.y);
                 g2.scale(scalex, scaley);
                 
                 //Draw base
                 g2.setColor(new Color(Integer.parseInt(DatabaseV2.CBACKGROUND.get())));
-                g2.fill(new Rectangle2D.Double(0, 0, ariawidth, ariaheight));
+                g2.fill(new Rectangle2D.Double(0, 0, areaWidth, areaHeight));
 
                 try {
                     AffineTransform t = g2.getTransform();
@@ -148,21 +148,17 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                     trans = new AffineTransform();
                 }
                 
-                double d = Math.min(DatabaseV2.ALDISTANCE.getsaved()/10,10);
+                double d = Math.min(DatabaseV2.ALDISTANCE.getsaved()/10, 10);
+                
                 if(AutoLevelSystem.leveled())
                 {
                     double max  = -Double.MAX_VALUE;
                     double min  =  Double.MAX_VALUE;
                     for(AutoLevelSystem.Point p:data.al.getPoints())
                     {
-                        if(min > p.getValue())
-                        {
-                            min = p.getValue();
-                        }
-                        if(max < p.getValue())
-                        {
-                            max = p.getValue();
-                        }
+                        double value = p.getValue();
+                        max = Math.max(max, value);
+                        min = Math.min(min, value);
                     }
                     double delta = max - min;
                     g2.setTransform(new AffineTransform());
@@ -170,15 +166,15 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                     int cy  = Math.max((int)(DatabaseV2.WORKSPACE1.getsaved()/DatabaseV2.ALDISTANCE.getsaved() * 10),rect.height);
                     double w    = rect.width/(double)cx;
                     double h    = rect.height/(double)cy;
-                    for(int x = 0;x < cx;x++)
+                    for(int x = 0; x < cx; x++)
                     {
-                        for(int y = 0;y < cy;y++)
+                        for(int y = 0; y < cy; y++)
                         {
                             Point2D p = trans.transform(new Point2D.Double((double)rect.x + (x + 0.5) * w,
                                                                            (double)rect.y + (y+0.5) * h),
                                                                             null);
                             double z        =   data.al.getdZ(p);
-                            double relative =   (z-min)/delta;
+                            double relative =   (z - min)/delta;
                             relative = Tools.adjustDouble(relative, 0, 1);
                             
                             g2.setColor(ColorHelper.numberToColorPercentage(relative));
@@ -188,7 +184,8 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                                         (int)Math.ceil(h));
                         }
                     }
-                    //Paint scall:
+                    
+                    //Paint scale:
                     Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
                     g2.setFont(font);
                     int zh      = (int)(font.getStringBounds(Tools.dtostr(100.0), g2.getFontRenderContext()).getHeight()) + 10;                    
@@ -241,14 +238,14 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                     g2.setColor(new Color(Integer.parseInt(DatabaseV2.CGRID.get())));
 
                     g2.setStroke(new BasicStroke((float)(1/scalex)));
-                    for(int x=1;x<ariawidth/DatabaseV2.CGRIDDISTANCE.getsaved();x++){
-                        Shape l = new Line2D.Double(x*DatabaseV2.CGRIDDISTANCE.getsaved(), 0, x*DatabaseV2.CGRIDDISTANCE.getsaved(), ariaheight);
+                    for(int x=1;x<areaWidth/DatabaseV2.CGRIDDISTANCE.getsaved();x++){
+                        Shape l = new Line2D.Double(x*DatabaseV2.CGRIDDISTANCE.getsaved(), 0, x*DatabaseV2.CGRIDDISTANCE.getsaved(), areaHeight);
                         g2.draw(l);
                     }
 
                     g2.setStroke(new BasicStroke((float)(1/scaley)));
-                    for(int y=1;y<ariaheight/DatabaseV2.CGRIDDISTANCE.getsaved();y++){
-                        Shape l = new Line2D.Double(0,(y*DatabaseV2.CGRIDDISTANCE.getsaved()),(ariawidth),(y*DatabaseV2.CGRIDDISTANCE.getsaved()));
+                    for(int y=1;y<areaHeight/DatabaseV2.CGRIDDISTANCE.getsaved();y++){
+                        Shape l = new Line2D.Double(0,(y*DatabaseV2.CGRIDDISTANCE.getsaved()),(areaWidth),(y*DatabaseV2.CGRIDDISTANCE.getsaved()));
                         g2.draw(l);
                     }
                 }
@@ -780,7 +777,7 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                         //Get next nearest Point:
                         double d    = Double.MAX_VALUE;
                         AutoLevelSystem.Point newpoint=null;
-                        for(int i = 0;i < (points.length - 1);i++)
+                        for(int i = 0; i < (points.length - 1); i++)
                         {
                             if(cmdpropeindex[i] == null && aktpoint.getPoint().distance(points[i].getPoint()) < d)
                             {
@@ -804,7 +801,7 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                     
                     //calc time
                     CNCCommand.Calchelper c = new CNCCommand.Calchelper();
-                    for(int i = 0;i < cmds.size();i++)
+                    for(int i = 0; i < cmds.size(); i++)
                     {
                         if(this.isCancelled())
                         {
@@ -822,7 +819,8 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                         //Simulate Clearancemove
                         if(Arrays.asList(cmdpropeindex).contains(i))
                         {
-                            (new CNCCommand("G0 Z" + Tools.dtostr(DatabaseV2.ALZERO.getsaved()- DatabaseV2.ALMAXPROBDEPTH.getsaved() + DatabaseV2.ALCLEARANCE.getsaved()))).calcCommand(c);
+                            double clearanceHeight = DatabaseV2.ALZERO.getsaved() - DatabaseV2.ALMAXPROBDEPTH.getsaved() + DatabaseV2.ALCLEARANCE.getsaved();
+                            (new CNCCommand("G0 Z" + Tools.dtostr(clearanceHeight))).calcCommand(c);
                         }
                         
                     }
@@ -832,7 +830,7 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                     //Execute the Commands
                     progress(0, Tools.formatDuration(maxTime));
 
-                    for(int i = 0;i < cmds.size();i++)
+                    for(int i=0; i < cmds.size(); i++)
                     {
                         CNCCommand cmd = cmds.get(i);
 
@@ -919,7 +917,8 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                             while(true){
                                 waitForNextSend();
                                 try{
-                                    Communication.send("G0 Z" + Tools.dtostr(thitValue+DatabaseV2.ALCLEARANCE.getsaved()) + " F" + DatabaseV2.GOFEEDRATE);
+                                    String clearance = Tools.dtostr(thitValue+DatabaseV2.ALCLEARANCE.getsaved());
+                                    Communication.send("G0 Z" + clearance + " F" + DatabaseV2.GOFEEDRATE);
                                 }
                                 catch(ComInterruptException ex)
                                 {
@@ -934,36 +933,31 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                     
                     }
                     
-                    double error    = points[0].getValue()-points[points.length - 1].getValue();
                     double max      = -Double.MAX_VALUE;
                     double min      = Double.MAX_VALUE;
                     double sum      = 0;
+
+                    double error    = points[0].getValue() - points[points.length - 1].getValue();
+                    double errorStep = (error / (points.length - 2));
                     
                     if(points.length > 2)
                     {
                         //error correction reconstruct oder
                         Integer[] keys = Arrays.copyOf(cmdpropeindex, cmdpropeindex.length); 
-                        Arrays.sort(keys,0,keys.length); 
-                        for(int i = 0;i < points.length - 1;i++)
+                        Arrays.sort(keys, 0, keys.length); 
+                        for(int i = 0; i < points.length - 1; i++)
                         {
                             int index = Arrays.asList(cmdpropeindex).indexOf(keys[i]);
-                            points[index].setValue(points[index].getValue() + i * (error / (points.length - 2)));
+                            points[index].setValue(points[index].getValue() + i * errorStep);
                         }
                     }
 
-                    for(int i = 0;i < points.length - 1;i++)
+                    for(int i = 0; i < points.length - 1; i++)
                     {
-
-                        if(min > points[i].getValue())
-                        {
-                            min = points[i].getValue();
-                        }
-                        if(max < points[i].getValue())
-                        {
-                            max = points[i].getValue();
-                        }
-                        sum += points[i].getValue();
-    
+                        double value = points[i].getValue();
+                        min = Math.min(min, value);
+                        max = Math.max(max, value);
+                        sum += value;    
                     }
                     
                     String message = "Autoleveling Done!"
