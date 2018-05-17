@@ -6,21 +6,8 @@ package cnc.gcode.controller;
 
 import cnc.gcode.controller.communication.ComInterruptException;
 import cnc.gcode.controller.communication.Communication;
-import cnc.gcode.controller.communication.IEndstopHit;
-import de.unikassel.ann.util.ColorHelper;
-import java.awt.BasicStroke;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.geom.AffineTransform;
-import java.awt.geom.Ellipse2D;
-import java.awt.geom.Line2D;
-import java.awt.geom.NoninvertibleTransformException;
 import java.awt.geom.Point2D;
-import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileInputStream;
@@ -70,200 +57,40 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
     
     
     private final TriggertSwingWorker<BufferedImage> painter = new TriggertSwingWorker<BufferedImage>() {
-            class GetDataSyncedHelper
-            {
-                private int jpw;
-                private int jph;
-                private AutoLevelSystem al;
-            }
+        class GetDataSyncedHelper
+        {
+            private int jpw;
+            private int jph;
+            private AutoLevelSystem al;
+        }
+
+        @Override
+        protected BufferedImage doJob() throws Exception {
+
+            //Load Parameter:
+            final GetDataSyncedHelper data = new GetDataSyncedHelper();
+            SwingUtilities.invokeAndWait(new Runnable() {
+                @Override
+                public void run() {
+                    data.jpw    = jPPaint.getWidth();
+                    data.jph    = jPPaint.getHeight();
+                    data.al     = al;
+                }
+            });        
             
-            @Override
-            protected BufferedImage doJob() throws Exception {
-                
-                //Load Parameter:
-                final GetDataSyncedHelper data= new GetDataSyncedHelper();
-                SwingUtilities.invokeAndWait(new Runnable() {
-                    @Override
-                    public void run() {
-                        data.jpw    = jPPaint.getWidth();
-                        data.jph    = jPPaint.getHeight();
-                        data.al     = al;
-                    }
-                });        
-                
-                data.jpw = Tools.adjustInt(data.jpw, 1, Integer.MAX_VALUE);
-                data.jph = Tools.adjustInt(data.jph, 1, Integer.MAX_VALUE);
-                    
-                BufferedImage image = new BufferedImage(data.jpw, data.jph, BufferedImage.TYPE_4BYTE_ABGR);
-                
-                Graphics2D g2 = image.createGraphics();
-                
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-                
-                //Scalling transforming ...
-                if(AutoLevelSystem.leveled())
-                {
-                    data.jpw -= 100;
-                }
-                
-                //StartCorner
-                g2.translate(data.jpw / 2, data.jph / 2);
-                switch(DatabaseV2.EHoming.get()) 
-                {
-                    case UPPER_LEFT:
-                    default:
-                        g2.scale(1,1);                
-                        break;
-                    case UPPER_RIGHT:
-                        g2.scale(-1,1);
-                        break;
-                    case LOWER_LEFT:
-                        g2.scale(1,-1);
-                        break;
-                    case LOWER_RIGHT:                
-                        g2.scale(-1,-1);
-                        break;
-                }                g2.translate(-data.jpw / 2, -data.jph / 2);
-                
-                //Display Position
-                double areaWidth    = DatabaseV2.WORKSPACE0.getsaved(); //x
-                double areaHeight   = DatabaseV2.WORKSPACE1.getsaved(); //y
-                Rectangle rect      = Geometrics.placeRectangle(data.jpw, data.jph, Geometrics.getRatio(areaWidth,areaHeight));
-                double scalex       = rect.width/areaWidth;
-                double scaley       = rect.height/areaHeight;
-                g2.translate(rect.x, rect.y);
-                g2.scale(scalex, scaley);
-                
-                //Draw base
-                g2.setColor(new Color(Integer.parseInt(DatabaseV2.CBACKGROUND.get())));
-                g2.fill(new Rectangle2D.Double(0, 0, areaWidth, areaHeight));
+            return AutoLevelPainter.paint(data.al, data.jpw, data.jph, trans);
+        }
 
-                try {
-                    AffineTransform t = g2.getTransform();
-                    t.invert();
-                    trans = t;
-                } catch (NoninvertibleTransformException ex) 
-                {
-                    trans = new AffineTransform();
-                }
-                
-                double d = Math.min(DatabaseV2.ALDISTANCE.getsaved()/10, 10);
-                
-                if(AutoLevelSystem.leveled())
-                {
-                    double max  = -Double.MAX_VALUE;
-                    double min  =  Double.MAX_VALUE;
-                    for(AutoLevelSystem.Point p:data.al.getPoints())
-                    {
-                        double value = p.getValue();
-                        max = Math.max(max, value);
-                        min = Math.min(min, value);
-                    }
-                    double delta = max - min;
-                    g2.setTransform(new AffineTransform());
-                    int cx  = Math.max((int)(DatabaseV2.WORKSPACE0.getsaved()/DatabaseV2.ALDISTANCE.getsaved() * 10),rect.width);
-                    int cy  = Math.max((int)(DatabaseV2.WORKSPACE1.getsaved()/DatabaseV2.ALDISTANCE.getsaved() * 10),rect.height);
-                    double w    = rect.width/(double)cx;
-                    double h    = rect.height/(double)cy;
-                    for(int x = 0; x < cx; x++)
-                    {
-                        for(int y = 0; y < cy; y++)
-                        {
-                            Point2D p = trans.transform(new Point2D.Double((double)rect.x + (x + 0.5) * w,
-                                                                           (double)rect.y + (y+0.5) * h),
-                                                                            null);
-                            double z        =   data.al.getdZ(p);
-                            double relative =   (z - min)/delta;
-                            relative = Tools.adjustDouble(relative, 0, 1);
-                            
-                            g2.setColor(ColorHelper.numberToColorPercentage(relative));
-                            g2.fillRect((int)Math.floor(rect.x + x * w),
-                                        (int)Math.floor(rect.y + y * h),
-                                        (int)Math.ceil(w),
-                                        (int)Math.ceil(h));
-                        }
-                    }
-                    
-                    //Paint scale:
-                    Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
-                    g2.setFont(font);
-                    int zh      = (int)(font.getStringBounds(Tools.dtostr(100.0), g2.getFontRenderContext()).getHeight()) + 10;                    
-                    int elements= data.jph / zh;
-                    int dy      = (data.jph-elements * zh) / 2;
-                    for(int i = 0;i < elements && elements >= 2;i++)
-                    {
-                        double z = max - i * (delta / (elements - 1));
-                        double relative = (z - min) / delta;
-                        relative = Tools.adjustDouble(relative, 0, 1);
- 
-                        Color c = ColorHelper.numberToColorPercentage(relative);
-                        g2.setColor(c);
-                        g2.fillRect(data.jpw + 5,
-                                    dy + zh * i,
-                                    90,
-                                    zh - 4);
-                        g2.setColor(((299 * c.getRed() + 587 * c.getGreen() + 114 * c.getBlue())> 128000) ? Color.black:Color.white);
-                        g2.drawString(Tools.dtostr(z), data.jpw + 10, dy + zh * i + zh - 10);
-                        g2.setColor(Color.black);
-                        g2.drawRect(data.jpw + 5,
-                                    dy + zh * i,
-                                    90,
-                                    zh - 4);
-                    }
-                    
-                    g2.translate(rect.x, rect.y);
-                    g2.scale(scalex, scaley);
-                }
-                else
-                {
-                    for(AutoLevelSystem.Point p:data.al.getPoints())
-                    {
-                        if(p.isLeveled())
-                        {
-                            g2.setColor(Color.green);
-                        }
-                        else
-                        {
-                            g2.setColor(Color.black);
-                        }
+        @Override
+        protected void process(BufferedImage chunk) {
+            image = chunk;
 
-                        g2.fill(new Ellipse2D.Double(p.getPoint().x - d / 2, p.getPoint().y - d / 2, d, d));
+            jPPaint.repaint();
+        }
 
-                    }
-                }
-                
-                //Draw coordinate plane
-                if(DatabaseV2.CGRIDDISTANCE.getsaved()>0){
-                    g2.setColor(new Color(Integer.parseInt(DatabaseV2.CGRID.get())));
+    };
 
-                    g2.setStroke(new BasicStroke((float)(1/scalex)));
-                    for(int x=1;x<areaWidth/DatabaseV2.CGRIDDISTANCE.getsaved();x++){
-                        Shape l = new Line2D.Double(x*DatabaseV2.CGRIDDISTANCE.getsaved(), 0, x*DatabaseV2.CGRIDDISTANCE.getsaved(), areaHeight);
-                        g2.draw(l);
-                    }
 
-                    g2.setStroke(new BasicStroke((float)(1/scaley)));
-                    for(int y=1;y<areaHeight/DatabaseV2.CGRIDDISTANCE.getsaved();y++){
-                        Shape l = new Line2D.Double(0,(y*DatabaseV2.CGRIDDISTANCE.getsaved()),(areaWidth),(y*DatabaseV2.CGRIDDISTANCE.getsaved()));
-                        g2.draw(l);
-                    }
-                }
-                
-                return image;
-            }
-
-            @Override
-            protected void process(BufferedImage chunk) {
-                image = chunk;
-                
-                jPPaint.repaint();
-            }
-            
-        };
-
-    
-    
     /**
      * Creates new form JPanelAutoLevel
      */
@@ -313,13 +140,13 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
             makeNewAl();
         };
         
-        axes = new NumberFieldManipulator[][]{
-                                    /*0 START*/                                             /*0 END*/
-                /*0 X*/ { new NumberFieldManipulator(jTFStartX, axesevent), new NumberFieldManipulator(jTFEndX, axesevent), },
-                /*1 Y*/ { new NumberFieldManipulator(jTFStartY, axesevent), new NumberFieldManipulator(jTFEndY, axesevent), },
-            };
+        axes = new NumberFieldManipulator[][] {
+                                /*0 START*/                                             /*0 END*/
+            /*0 X*/ { new NumberFieldManipulator(jTFStartX, axesevent), new NumberFieldManipulator(jTFEndX, axesevent), },
+            /*1 Y*/ { new NumberFieldManipulator(jTFStartY, axesevent), new NumberFieldManipulator(jTFEndY, axesevent), },
+        };
         
-        for(int i = 0;i < 2;i++)
+        for (int i = 0; i < 2; i++)
         {
                 axes[i][0].set(DatabaseV2.ALDISTANCE.getsaved() / 2);
                 axes[i][1].set(DatabaseV2.getWorkspace(i).getsaved()- DatabaseV2.ALDISTANCE.getsaved() / 2);
@@ -830,67 +657,67 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                     //Execute the Commands
                     progress(0, Tools.formatDuration(maxTime));
 
-                    for(int i=0; i < cmds.size(); i++)
+                    for (int i=0; i < cmds.size(); i++)
                     {
                         CNCCommand cmd = cmds.get(i);
 
                         setProgress(100 * i / cmds.size(), "~" + Tools.formatDuration(maxTime - cmd.getSecounds()));
 
-                        for(String execute:cmd.execute(new CNCCommand.Transform(0, 0, 0, false, false),false,false))
+                        for (String execute:cmd.execute(new CNCCommand.Transform(0, 0, 0, false, false), false, false))
                         {
-                            while(true)
+                            while (true)
                             {
                                 waitForNextSend();
                                 hit = false;
-                                pos=false;
-                                try{
+                                pos = false;
+                                try {
                                     Communication.send(execute);
                                 }
-                                catch(ComInterruptException ex){
+                                catch (ComInterruptException ex){
                                     continue;
                                 }
                                 break;
                             }                            
                         }
                         
-                        if(Arrays.asList(cmdpropeindex).contains(i))
+                        if (Arrays.asList(cmdpropeindex).contains(i))
                         {
                             //Probing Done waiting for hit:
-                            if(Communication.isSimulation() == false)
+                            if (Communication.isSimulation() == false)
                             {
                                 Communication.send("G30");
                                 waitForTrigger(1000 * 60 * 10); //10min max
                             }
-                            else{
+                            else {
                                 waitForTrigger(10);
                                 hitvalue    = (new Random()).nextDouble();
                                 hit         = true; 
                                 pos         = true;
                             }
                             
-                            if(hit == false)
+                            if (hit == false)
                             {
                                 throw new MyException("Timeout: No end stop hit!");
                             }
                             
                             //Read Pos
-                            while(true)
+                            while (true)
                             {
                                 waitForNextSend();
-                                try{
+                                try {
                                     Communication.send(Communication.getredPostionCommand());
                                 }
-                                catch(ComInterruptException ex){
+                                catch (ComInterruptException ex){
                                     continue;
                                 }
                                 break;
                             }                            
                             
-                            if(Communication.isSimulation() == false) {
+                            if (Communication.isSimulation() == false) {
                                 waitForTrigger(1000); //1s max
                             }
 
-                            if(pos == false)
+                            if (pos == false)
                             {
                                 throw new MyException("Timeout: No position report!");
                             }
@@ -901,10 +728,11 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                             points[Arrays.asList(cmdpropeindex).indexOf(i)].setValue(thitValue);
 
                             //Reset Z position
-                            while(true)
+                            while (true)
                             {
                                 waitForNextSend();
                                 try{
+                                    // set internal z position
                                     Communication.send("G92 Z" + Tools.dtostr(thitValue));
                                 }
                                 catch(ComInterruptException ex){
@@ -1050,7 +878,7 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
 
     
     private void jBExportActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBExportActionPerformed
-        JFileChooser fc= DatabaseV2.getFileChooser();
+        JFileChooser fc = DatabaseV2.getFileChooser();
         fc.setFileFilter(new FileFilter() {
             @Override
             public boolean accept(File f) {
