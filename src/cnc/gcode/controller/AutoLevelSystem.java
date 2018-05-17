@@ -32,7 +32,7 @@ public class AutoLevelSystem implements java.io.Serializable{
         
         public synchronized void setValue(double v) 
         {
-            value=v;
+            value = v;
         }
 
         public synchronized double getValue() {
@@ -47,7 +47,6 @@ public class AutoLevelSystem implements java.io.Serializable{
         public synchronized String toString() {
             return "Position: [" + Tools.dtostr(p.x) + ","+Tools.dtostr(p.y) + "] \nValue: " + (isLeveled()?Tools.dtostr(value) :"is not measured!"); 
         }
-
 
     }
     
@@ -72,26 +71,27 @@ public class AutoLevelSystem implements java.io.Serializable{
             return;
         }
         
-        int countx = (int)Math.ceil(dx / DatabaseV2.ALDISTANCE.getsaved());
-        int county = (int)Math.ceil(dy / DatabaseV2.ALDISTANCE.getsaved());
+        double distanceBetweenPoints = DatabaseV2.ALDISTANCE.getsaved();
+        int countX = (int)Math.ceil(dx / distanceBetweenPoints);
+        int countY = (int)Math.ceil(dy / distanceBetweenPoints);
         
-        double distanceX = dx / countx;
-        if(countx == 0)
+        double distanceX = dx / countX;
+        if(countX == 0)
         {
             distanceX = 0;
         }
-        double distanceY = dy / county;
-        if(county == 0)
+        double distanceY = dy / countY;
+        if(countY == 0)
         {
             distanceY = 0;
         }
         
-        points  = new Point[countx + 1][county + 1];
+        points  = new Point[countX + 1][countY + 1];
         pos     = new Rectangle2D.Double(sx,sy, distanceX, distanceY);
         
-        for(int i = 0;i < countx + 1; i++)
+        for(int i = 0; i <= countX; i++)
         {
-            for (int j = 0;j < county + 1;j++)
+            for (int j = 0; j <= countY; j++)
             {
                 points[i][j] = new Point(sx + i * distanceX, sy + j * distanceY);
             }
@@ -101,9 +101,9 @@ public class AutoLevelSystem implements java.io.Serializable{
     public Point[] getPoints()
     {
         LinkedList<Point> r = new LinkedList<>();
-        for(Point[] pp:points)
+        for(Point[] row:points)
         {
-            for(Point p:pp)
+            for(Point p:row)
             {
                 r.add(p);
             }
@@ -120,9 +120,9 @@ public class AutoLevelSystem implements java.io.Serializable{
         }
 
         boolean isleveled = true;
-        for(Point[] pp:points)
+        for(Point[] row:points)
         {
-            for(Point p:pp)
+            for(Point p:row)
             {
                 if(p.isLeveled() == false)
                 {
@@ -160,7 +160,7 @@ public class AutoLevelSystem implements java.io.Serializable{
             return 0.0;
         }
         
-        if(DatabaseV2.EOnOff.get(DatabaseV2.ALUSEOUTSIDEPROBEAREA)==DatabaseV2.EOnOff.OFF)
+        if(DatabaseV2.EOnOff.get(DatabaseV2.ALUSEOUTSIDEPROBEAREA) == DatabaseV2.EOnOff.OFF)
         {
             // No interpolation if our point is outside the probed area 
             Point2D.Double minPt = points[0][0].getPoint();
@@ -206,12 +206,20 @@ public class AutoLevelSystem implements java.io.Serializable{
         {
             return linearInterpolation(points[p0X][p0Y].getPoint().getY(), points[p0X][p1Y].getPoint().getY(), points[p0X][p0Y].getValue(), points[p0X][p1Y].getValue(), p.getY());
         }
-
-        //http://en.wikipedia.org/wiki/Bilinear_interpolation#Algorithm
-        double r1 = linearInterpolation(points[p0X][p0Y].getPoint().getX(), points[p1X][p0Y].getPoint().getX(), points[p0X][p0Y].getValue(), points[p1X][p0Y].getValue(), p.getX());
-        double r2 = linearInterpolation(points[p0X][p1Y].getPoint().getX(), points[p1X][p1Y].getPoint().getX(), points[p0X][p1Y].getValue(), points[p1X][p1Y].getValue(), p.getX());
-        return    linearInterpolation(points[p0X][p0Y].getPoint().getY(), points[p0X][p1Y].getPoint().getY(), r1, r2, p.getY());
         
+        Point2D.Double p00 = points[p0X][p0Y].getPoint();
+        Point2D.Double p01 = points[p0X][p1Y].getPoint();
+        Point2D.Double p10 = points[p1X][p0Y].getPoint();
+        Point2D.Double p11 = points[p1X][p1Y].getPoint();
+        double v00 = points[p0X][p0Y].getValue();
+        double v01 = points[p0X][p1Y].getValue();
+        double v10 = points[p1X][p0Y].getValue();
+        double v11 = points[p1X][p1Y].getValue();
+        
+        //http://en.wikipedia.org/wiki/Bilinear_interpolation#Algorithm
+        double r1 = linearInterpolation(p00.getX(), p10.getX(), v00, v10, p.getX());
+        double r2 = linearInterpolation(p01.getX(), p11.getX(), v01, v11, p.getX());
+        return    linearInterpolation(p00.getY(), p01.getY(), r1, r2, p.getY());        
     }
     
     
@@ -225,28 +233,29 @@ public class AutoLevelSystem implements java.io.Serializable{
     
     public static double correctZ(double x, double y, double z)
     {
-        double d = al.getdZ(new Point2D.Double(x, y))-DatabaseV2.ALZERO.getsaved();
+        double autolevelZero = (double)DatabaseV2.ALZERO.getsaved();
+        
+        double dZ = al.getdZ(new Point2D.Double(x, y));
+        
+        double d = dZ - autolevelZero;
         
         if(Double.isNaN(d))
         {
             //this should never happen!
             (new MyException("Autoleveling Error!")).printStackTrace();
-            d = maxz()- DatabaseV2.ALZERO.getsaved(); 
+            d = maxZ() - autolevelZero; 
         }
         
         return z + d;
     }
     
-    private static double maxz() {
+    private static double maxZ() {
         double max = -Double.MAX_VALUE;
-        for(Point[] xy:al.points)
+        for(Point[] row:al.points)
         {
-            for(Point p:xy)
+            for(Point p:row)
             {
-                if(max < p.value)
-                {
-                    max = p.value;
-                }
+                max = Math.max(max, p.value);
             }
         }
         return max;
