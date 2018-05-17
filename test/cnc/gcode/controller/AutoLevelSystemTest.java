@@ -5,6 +5,7 @@
  */
 package cnc.gcode.controller;
 
+
 import java.awt.geom.Point2D;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -44,7 +45,6 @@ public class AutoLevelSystemTest {
     @Test
     public void testGetPoints() {
         AutoLevelSystem instance = new AutoLevelSystem(0, 0, 100, 100);
-        AutoLevelSystem.Point[] expResult = new AutoLevelSystem.Point[100];
         AutoLevelSystem.Point[] result = instance.getPoints();
         assertEquals(result.length, 11*11);
     }
@@ -55,9 +55,14 @@ public class AutoLevelSystemTest {
     @Test
     public void testIsLeveled() {
         AutoLevelSystem instance = new AutoLevelSystem();
-        boolean expResult = false;
-        boolean result = instance.isLeveled();
-        assertEquals(expResult, result);
+        assertEquals(instance.isLeveled(), false);
+
+        AutoLevelSystem.Point p = new AutoLevelSystem.Point(0,0);
+        p.setValue(0.1);
+        AutoLevelSystem.Point[][] points = {{ p }};
+        instance.points = points;
+
+        assertEquals(instance.isLeveled(), true);
     }
 
     /**
@@ -79,7 +84,6 @@ public class AutoLevelSystemTest {
     public void testPublish() {
         AutoLevelSystem al = null;
         AutoLevelSystem.publish(al);
-        // TODO review the generated test code and remove the default call to fail.
     }
 
     /**
@@ -104,9 +108,19 @@ public class AutoLevelSystemTest {
      */
     @Test
     public void testLeveled() {
-        boolean expResult = false;
+        // instance isn't published
         boolean result = AutoLevelSystem.leveled();
-        assertEquals(expResult, result);
+        assertEquals(result, false);
+        
+        // instance with one point that has a level
+        AutoLevelSystem instance = new AutoLevelSystem();
+        AutoLevelSystem.Point p = new AutoLevelSystem.Point(0,0);
+        p.setValue(0.1);
+        AutoLevelSystem.Point[][] points = {{ p }};
+        instance.points = points;
+        AutoLevelSystem.publish(instance);
+        boolean result2 = AutoLevelSystem.leveled();
+        assertEquals(result2, true);
     }
     
 }

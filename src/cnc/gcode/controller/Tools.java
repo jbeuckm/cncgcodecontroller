@@ -58,9 +58,9 @@ public class Tools {
         return df.get().format(d);
     }
     
-    public static String formatDuration(long secounds)
+    public static String formatDuration(long seconds)
     {
-        return String.format("%d:%02d:%02d", secounds/3600,(secounds%3600)/60,(secounds%60));
+        return String.format("%d:%02d:%02d", seconds/3600,(seconds%3600)/60,(seconds%60));
     }
     
     public static String convertToMultiline(String orig)
@@ -68,7 +68,7 @@ public class Tools {
         return "<html>" + orig.replaceAll("\n", "<br>");
     }    
     
-    public static Double[] getValues(String[] messages,Double[] defaults, Double[] max, Double[] min)
+    public static Double[] getValues(String[] messages, Double[] defaults, Double[] max, Double[] min)
     {
         if(messages.length != defaults.length || messages.length != max.length || messages.length != min.length)
         {
@@ -77,7 +77,7 @@ public class Tools {
 
         Double[] values = new Double[messages.length];
 
-        for(int i = 0;i < messages.length;i++)
+        for(int i = 0; i < messages.length; i++)
         {
             values[i] = defaults[i];
             while(true)
@@ -133,6 +133,7 @@ public class Tools {
         }
         return value;
     }
+    
     public static double adjustDouble(double value, double min, double max)
     {
         if(value < min)
@@ -146,7 +147,7 @@ public class Tools {
         return value;
     }
     
-    public static Color setAlpha(Color c,double a){
+    public static Color setAlpha(Color c, double a){
         return new Color(c.getRed(), c.getGreen(), c.getBlue(),(int)(255*a));
     }
 }
