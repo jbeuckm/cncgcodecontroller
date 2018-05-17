@@ -10,8 +10,6 @@ import cnc.gcode.controller.IEvent;
 import cnc.gcode.controller.MyException;
 import cnc.gcode.controller.ObjectProxy;
 import cnc.gcode.controller.Tools;
-import java.lang.reflect.InvocationTargetException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.logging.Level;
