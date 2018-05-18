@@ -331,7 +331,7 @@ public final class Geometrics {
                 r.width += delta.x; 
             case UPPER_SIDE:                      
             default:
-                maxWidth = max.x-r.x;
+                maxWidth = max.x - r.x;
                 break;
                 
             case LEFT_SIDE:     //                 

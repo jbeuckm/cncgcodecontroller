@@ -7,7 +7,7 @@ import org.junit.runners.Suite;
 
 @Suite.SuiteClasses({
    ToolsTest.class,
-    GeometricsTest.class,
+   GeometricsTest.class,
    AutoLevelSystemTest.class,
 })
 
