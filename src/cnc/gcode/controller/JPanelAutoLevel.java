@@ -150,7 +150,6 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
             if(worker != null)
             {
                 worker.zEndstopHit(value);
-                worker.trigger();                
             }
         });        
 
@@ -158,7 +157,6 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
             if(worker != null)
             {
                 worker.addLocationString(value);
-                worker.trigger();
             }
         });        
         

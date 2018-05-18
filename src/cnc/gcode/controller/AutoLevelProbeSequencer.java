@@ -48,11 +48,13 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
     
     public synchronized void zEndstopHit(double value) {
         hit = true;
+        trigger();
     }
 
     public synchronized void addLocationString(double[] value) {
         hitvalue = value[2];
         pos = true;
+        trigger();
     }        
 
     @Override
