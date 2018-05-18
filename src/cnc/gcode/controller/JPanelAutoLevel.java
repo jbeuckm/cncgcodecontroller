@@ -16,8 +16,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutput;
 import java.io.ObjectOutputStream;
 import java.text.ParseException;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import javax.swing.JFileChooser;
 import javax.swing.JOptionPane;
@@ -33,7 +31,6 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
     private IEvent GUIEvent = null;
     
     public AutoLevelSystem al = new AutoLevelSystem();
-    
     
     NumberFieldManipulator[][] axes;
     private AutoLevelProbeSequencer worker   = null;
@@ -131,10 +128,11 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
             /*1 Y*/ { new NumberFieldManipulator(jTFStartY, axesevent), new NumberFieldManipulator(jTFEndY, axesevent), },
         };
         
+        double autolevelDistance = DatabaseV2.ALDISTANCE.getsaved();
         for (int i = 0; i < 2; i++)
         {
-                axes[i][0].set(DatabaseV2.ALDISTANCE.getsaved() / 2);
-                axes[i][1].set(DatabaseV2.getWorkspace(i).getsaved()- DatabaseV2.ALDISTANCE.getsaved() / 2);
+                axes[i][0].set(autolevelDistance / 2);
+                axes[i][1].set(DatabaseV2.getWorkspace(i).getsaved() - autolevelDistance / 2);
         }
         makeNewAl();
 
@@ -170,13 +168,15 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
     @Override
     public void updateGUI(boolean serial, boolean isworking) 
     {
-        jTFStartX.setEnabled(!isRunning() && !al.isLeveled());
-        jTFStartY.setEnabled(!isRunning() && !al.isLeveled());
-        jTFEndX.setEnabled(!isRunning() && !al.isLeveled());
-        jTFEndY.setEnabled(!isRunning() && !al.isLeveled());
+        boolean rectFieldsEnabled = !isRunning() && !al.isLeveled();
+        
+        jTFStartX.setEnabled(rectFieldsEnabled);
+        jTFStartY.setEnabled(rectFieldsEnabled);
+        jTFEndX.setEnabled(rectFieldsEnabled);
+        jTFEndY.setEnabled(rectFieldsEnabled);
 
                              //START                  ABORT           CLEAR
-        jBAction.setEnabled((!isworking && serial) || isRunning() || (isLeveled()&&!isworking));
+        jBAction.setEnabled((!isworking && serial) || isRunning() || (isLeveled() && !isworking));
         if(isLeveled())
         {
             jBAction.setText("Clear");
@@ -191,7 +191,7 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
         }
         
         jBPause.setEnabled(isRunning());
-        jBPause.setText((isRunning() && worker.isPaused())?"Resume":"Pause");
+        jBPause.setText((isRunning() && worker.isPaused())? "Resume" : "Pause");
 
         if(isRunning() == false)
         {
@@ -516,17 +516,8 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
                 JOptionPane.showMessageDialog(JPanelAutoLevel.this, "No points to level");
                 return;
             }
-            //Marlin makes an error (looks like rounding problem with G92 stepcount it much more resulution ...)
-            //so probing 1 point twice
-            AutoLevelSystem.Point[] points = (new ArrayList<AutoLevelSystem.Point>(){
-                {
-                    AutoLevelSystem.Point[] ps = al.getPoints();
-                    addAll(Arrays.asList(ps));
-                    add(new AutoLevelSystem.Point(ps[0].getPoint().x, ps[0].getPoint().y));
-                }
-            }).toArray(new AutoLevelSystem.Point[0]);
 
-            worker = new AutoLevelProbeSequencer(points) {
+            worker = new AutoLevelProbeSequencer(al.getPoints()) {
                 @Override
                 protected void progress(int progress, String message) 
                 {
@@ -597,7 +588,7 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
             return;
         }
         
-        try{
+        try {
             try (ObjectInput in = new ObjectInputStream(new FileInputStream(fc.getSelectedFile()))) 
             {
                 al = (AutoLevelSystem)in.readObject();
@@ -610,7 +601,6 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
         AutoLevelSystem.publish(al);
 
         fireupdateGUI();
-
     }//GEN-LAST:event_jBImportActionPerformed
 
     
@@ -655,7 +645,6 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
         catch (Exception e){
             JOptionPane.showMessageDialog(this, "Cannot export file! (" + e.getMessage() + ")");
         }
-        
 
     }//GEN-LAST:event_jBExportActionPerformed
 

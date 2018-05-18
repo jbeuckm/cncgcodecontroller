@@ -26,7 +26,15 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
     private double          hitvalue= 0;
     
     AutoLevelProbeSequencer(AutoLevelSystem.Point[] _points) {
-        this.points = _points;
+        //Marlin makes an error (looks like rounding problem with G92 stepcount it much more resulution ...)
+        //so probing 1 point twice
+        this.points = (new ArrayList<AutoLevelSystem.Point>(){
+            {
+                AutoLevelSystem.Point[] ps = _points;
+                addAll(Arrays.asList(ps));
+                add(new AutoLevelSystem.Point(ps[0].getPoint().x, ps[0].getPoint().y));
+            }
+        }).toArray(new AutoLevelSystem.Point[0]);
     }
 
     protected void progress(int progress, String message) {}
