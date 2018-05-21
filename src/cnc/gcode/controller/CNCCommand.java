@@ -4,6 +4,7 @@
  */
 package cnc.gcode.controller;
 
+import cnc.gcode.controller.autolevel.AutoLevelSystem;
 import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Graphics2D;
@@ -146,7 +147,7 @@ public class CNCCommand {
                                     Double.NaN}; //X,Y,Z,F
         
         Type lastMovetype = Type.UNKNOWN;
-        double seconds = 0;
+        public double seconds = 0;
         
         /**
          * False is positive move
@@ -809,7 +810,7 @@ public class CNCCommand {
         return moves.toArray(new Move[0]);
     }
 
-    String[] execute(Transform t, boolean autoleveling, boolean noshort) {
+    public String[] execute(Transform t, boolean autoleveling, boolean noshort) {
         ArrayList<String> cmds = new ArrayList<>();
         String cmd;
         Move[] moves = getMoves();

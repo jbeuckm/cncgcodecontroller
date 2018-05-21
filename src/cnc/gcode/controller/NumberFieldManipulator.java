@@ -26,7 +26,7 @@ import javax.swing.Timer;
  *
  * @author patrick
  */
-class NumberFieldManipulator {
+public class NumberFieldManipulator {
 
     public interface IChangeEvent
     {

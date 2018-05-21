@@ -84,7 +84,7 @@
             </Constraint>
           </Constraints>
         </Component>
-        <Component class="cnc.gcode.controller.JPanelAutoLevel" name="jPanelAutoLevel1">
+        <Component class="cnc.gcode.controller.autolevel.JPanelAutoLevel" name="jPanelAutoLevel1">
           <Constraints>
             <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout" value="org.netbeans.modules.form.compat2.layouts.support.JTabbedPaneSupportLayout$JTabbedPaneConstraintsDescription">
               <JTabbedPaneConstraints tabName="Auto Level">

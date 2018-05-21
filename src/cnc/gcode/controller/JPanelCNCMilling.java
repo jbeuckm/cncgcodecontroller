@@ -4,6 +4,7 @@
  */
 package cnc.gcode.controller;
 
+import cnc.gcode.controller.autolevel.AutoLevelSystem;
 import cnc.gcode.controller.communication.ComInterruptException;
 import cnc.gcode.controller.communication.Communication;
 import java.awt.BasicStroke;

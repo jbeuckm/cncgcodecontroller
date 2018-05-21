@@ -6,6 +6,7 @@
 package cnc.gcode.controller;
 
 
+import cnc.gcode.controller.autolevel.AutoLevelSystem;
 import java.awt.geom.Point2D;
 import org.junit.After;
 import org.junit.AfterClass;

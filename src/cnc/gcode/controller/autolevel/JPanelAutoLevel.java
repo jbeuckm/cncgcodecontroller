@@ -2,8 +2,15 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package cnc.gcode.controller;
+package cnc.gcode.controller.autolevel;
 
+import cnc.gcode.controller.DatabaseV2;
+import cnc.gcode.controller.IEvent;
+import cnc.gcode.controller.IGUIEvent;
+import cnc.gcode.controller.JPPaintableEvent;
+import cnc.gcode.controller.NumberFieldManipulator;
+import cnc.gcode.controller.Tools;
+import cnc.gcode.controller.TriggertSwingWorker;
 import cnc.gcode.controller.communication.Communication;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;

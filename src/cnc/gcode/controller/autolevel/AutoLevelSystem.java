@@ -2,8 +2,11 @@
  * To change this template, choose Tools | Templates
  * and open the template in the editor.
  */
-package cnc.gcode.controller;
+package cnc.gcode.controller.autolevel;
 
+import cnc.gcode.controller.DatabaseV2;
+import cnc.gcode.controller.MyException;
+import cnc.gcode.controller.Tools;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
 import java.util.LinkedList;
@@ -50,7 +53,7 @@ public class AutoLevelSystem implements java.io.Serializable{
 
     }
     
-    Point[][] points;
+    public Point[][] points;
     Rectangle2D.Double pos;
     
     public AutoLevelSystem() {
