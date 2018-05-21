@@ -25,6 +25,11 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
     private boolean         pos     = false;
     private double          hitvalue= 0;
     
+    private ArrayList<CNCCommand> cmds;
+    private Integer[] cmdpropeindex;
+    private long maxTime;
+
+    
     AutoLevelProbeSequencer(AutoLevelSystem.Point[] _points) {
         //Marlin makes an error (looks like rounding problem with G92 stepcount it much more resulution ...)
         //so probing 1 point twice
@@ -35,6 +40,22 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
                 add(new AutoLevelSystem.Point(ps[0].getPoint().x, ps[0].getPoint().y));
             }
         }).toArray(new AutoLevelSystem.Point[0]);
+    }
+
+    
+    @Override
+    protected String doInBackground() throws Exception {
+
+        progress(0, "Processing commands");
+        Thread.sleep(1000);
+
+        generateGcodes();
+        
+        maxTime = estimateTime();
+
+        executeCommands();
+
+        return buildReport();
     }
 
     protected void progress(int progress, String message) {}
@@ -63,40 +84,38 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
         hitvalue = value[2];
         pos = true;
         trigger();
-    }        
+    }
 
-    @Override
-    protected String doInBackground() throws Exception {
-
-        progress(0, "Processing commands");
-        Thread.sleep(1000);
-
-        //--------------Generate GCODES------------------------
-        Integer[] cmdpropeindex = new Integer[points.length];
-        ArrayList<CNCCommand> cmds = new ArrayList<>(points.length * 2 + 20);
+    
+    private void generateGcodes() {
+        cmdpropeindex = new Integer[points.length];
+        cmds = new ArrayList<>(points.length * 2 + 20);
 
         //add start Command
         cmds.add(CNCCommand.getALStartCommand());
 
-        //go to save hight
+        //go to safe height
         cmds.add(new CNCCommand("G0 Z" + DatabaseV2.ALSAVEHEIGHT));
 
         AutoLevelSystem.Point aktpoint = points[0];
+        Point2D aktpointPosition = null;
         Point2D lastpos = null;
 
         while (true)
         {
             if (this.isCancelled())
             {
-                return null;
+                return;
             }
 
+            aktpointPosition = aktpoint.getPoint();
+
             //go to Point
-            if (lastpos == null || !lastpos.equals(aktpoint.getPoint()))
+            if (lastpos == null || !lastpos.equals(aktpointPosition))
             {
-                cmds.add(new CNCCommand("G0 X" + Tools.dtostr(aktpoint.getPoint().getX()) + " Y" + Tools.dtostr(aktpoint.getPoint().getY())));
+                cmds.add(new CNCCommand("G0 X" + Tools.dtostr(aktpointPosition.getX()) + " Y" + Tools.dtostr(aktpointPosition.getY())));
             }
-            lastpos = aktpoint.getPoint();
+            lastpos = aktpointPosition;
 
             //Prope
             cmdpropeindex[Arrays.asList(points).indexOf(aktpoint)] = cmds.size();
@@ -110,10 +129,10 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
             AutoLevelSystem.Point newpoint=null;
             for (int i = 0; i < (points.length - 1); i++)
             {
-                if (cmdpropeindex[i] == null && aktpoint.getPoint().distance(points[i].getPoint()) < d)
+                if (cmdpropeindex[i] == null && aktpointPosition.distance(points[i].getPoint()) < d)
                 {
                     newpoint    = points[i];
-                    d           = aktpoint.getPoint().distance(points[i].getPoint());
+                    d           = aktpointPosition.distance(points[i].getPoint());
                 }
             }
             if (cmdpropeindex[points.length - 1] == null && newpoint == null)
@@ -127,16 +146,18 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
             aktpoint = newpoint;
         }
 
-        //go to save hight
-        cmds.add(new CNCCommand("G0 Z" + DatabaseV2.ALSAVEHEIGHT));
-
+        //go to safe height
+        cmds.add(new CNCCommand("G0 Z" + DatabaseV2.ALSAVEHEIGHT));        
+    }
+    
+    private long estimateTime() throws MyException {
         //calc time
         CNCCommand.Calchelper c = new CNCCommand.Calchelper();
         for (int i = 0; i < cmds.size(); i++)
         {
             if (this.isCancelled())
             {
-                return null;
+                return -1;
             }
 
             cmds.get(i).calcCommand(c);
@@ -156,8 +177,10 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
 
         }
 
-        long maxTime = (long)c.seconds;
-
+        return (long)c.seconds;
+    }
+    
+    private void executeCommands() throws Exception {
         //Execute the Commands
         progress(0, Tools.formatDuration(maxTime));
 
@@ -264,7 +287,9 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
             }
 
         }
-
+    }
+    
+    private String buildReport() {
         double max      = -Double.MAX_VALUE;
         double min      = Double.MAX_VALUE;
         double sum      = 0;

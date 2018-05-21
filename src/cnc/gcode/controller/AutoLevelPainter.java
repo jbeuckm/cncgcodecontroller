@@ -121,25 +121,7 @@ public class AutoLevelPainter {
         }
     }
     
-    public static BufferedImage paint(AutoLevelSystem al, int jpw, int jph, AffineTransform trans) {
-
-        jpw = Tools.adjustInt(jpw, 1, Integer.MAX_VALUE);
-        jph = Tools.adjustInt(jph, 1, Integer.MAX_VALUE);
-
-        BufferedImage image = new BufferedImage(jpw, jph, BufferedImage.TYPE_4BYTE_ABGR);
-
-        Graphics2D g2 = image.createGraphics();
-
-        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
-
-        //Scalling transforming ...
-        if(AutoLevelSystem.leveled())
-        {
-            jpw -= 100;
-        }
-
-        //StartCorner
+    private static void scaleForStartCorner(int jpw, int jph, Graphics2D g2) {
         g2.translate(jpw / 2, jph / 2);
         switch (DatabaseV2.EHoming.get()) 
         {
@@ -158,6 +140,27 @@ public class AutoLevelPainter {
                 break;
         }
         g2.translate(-jpw / 2, -jph / 2);
+    }
+    
+    public static BufferedImage paint(AutoLevelSystem al, int jpw, int jph, AffineTransform trans) {
+
+        jpw = Tools.adjustInt(jpw, 1, Integer.MAX_VALUE);
+        jph = Tools.adjustInt(jph, 1, Integer.MAX_VALUE);
+
+        BufferedImage image = new BufferedImage(jpw, jph, BufferedImage.TYPE_4BYTE_ABGR);
+
+        Graphics2D g2 = image.createGraphics();
+
+        g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+        //Scalling transforming ...
+        if(AutoLevelSystem.leveled())
+        {
+            jpw -= 100;
+        }
+
+        scaleForStartCorner(jpw, jph, g2);
 
         //Display Position
         double areaWidth    = DatabaseV2.WORKSPACE0.getsaved(); //x
