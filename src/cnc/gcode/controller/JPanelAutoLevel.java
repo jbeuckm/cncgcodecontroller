@@ -41,8 +41,8 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
     private final TriggertSwingWorker<BufferedImage> painter = new TriggertSwingWorker<BufferedImage>() {
         class GetDataSyncedHelper
         {
-            private int jpw;
-            private int jph;
+            private int paintableWidth;
+            private int paintableHeight;
             private AutoLevelSystem al;
         }
 
@@ -54,13 +54,13 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
             SwingUtilities.invokeAndWait(new Runnable() {
                 @Override
                 public void run() {
-                    data.jpw    = jPPaint.getWidth();
-                    data.jph    = jPPaint.getHeight();
+                    data.paintableWidth    = jPPaint.getWidth();
+                    data.paintableHeight    = jPPaint.getHeight();
                     data.al     = al;
                 }
             });        
             
-            return AutoLevelPainter.paint(data.al, data.jpw, data.jph, trans);
+            return AutoLevelPainter.paint(data.al, data.paintableWidth, data.paintableHeight, trans);
         }
 
         @Override
@@ -93,7 +93,7 @@ public class JPanelAutoLevel extends javax.swing.JPanel implements IGUIEvent {
             axis.set(value);
             
             //Check Values
-            for(int i = 0;i < 2;i++)
+            for(int i = 0; i < 2; i++)
             {
                 for(NumberFieldManipulator n:axes[i])
                 {

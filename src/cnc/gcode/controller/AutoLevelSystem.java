@@ -58,13 +58,13 @@ public class AutoLevelSystem implements java.io.Serializable{
         pos     = new Rectangle2D.Double(0, 0, 0, 0);
     }
     
-    public AutoLevelSystem(double sx,double sy,double ex,double ey)
+    public AutoLevelSystem(double startX, double startY, double endX, double endY)
     {
         this();
         
         //calc Points
-        double dx = ex - sx;
-        double dy = ey - sy;
+        double dx = endX - startX;
+        double dy = endY - startY;
 
         if(dx < 0 || dy < 0 )
         {
@@ -75,25 +75,26 @@ public class AutoLevelSystem implements java.io.Serializable{
         int countX = (int)Math.ceil(dx / distanceBetweenPoints);
         int countY = (int)Math.ceil(dy / distanceBetweenPoints);
         
-        double distanceX = dx / countX;
+        double distanceX = dx / (double)countX;
         if(countX == 0)
         {
             distanceX = 0;
         }
-        double distanceY = dy / countY;
+        double distanceY = dy / (double)countY;
         if(countY == 0)
         {
             distanceY = 0;
         }
-        
+        System.out.println("distanceX = "+distanceX);
+        System.out.println("distanceY = "+distanceY);
         points  = new Point[countX + 1][countY + 1];
-        pos     = new Rectangle2D.Double(sx,sy, distanceX, distanceY);
+        pos     = new Rectangle2D.Double(startX, startY, distanceX, distanceY);
         
         for(int i = 0; i <= countX; i++)
         {
             for (int j = 0; j <= countY; j++)
             {
-                points[i][j] = new Point(sx + i * distanceX, sy + j * distanceY);
+                points[i][j] = new Point(startX + (double)i * distanceX, startY + (double)j * distanceY);
             }
         }
     }
