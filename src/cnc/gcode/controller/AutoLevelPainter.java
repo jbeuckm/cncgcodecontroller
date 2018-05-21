@@ -27,14 +27,14 @@ import java.awt.image.BufferedImage;
  */
 public class AutoLevelPainter {
     
-    private static void paintHeatmap(AutoLevelSystem al, int jpw, int jph, AffineTransform trans, Graphics2D g2) {
+    private static Point2D.Double paintHeatmap(AutoLevelSystem al, int paintableWidth, int paintableHeight, AffineTransform trans, Graphics2D g2) {
 
         double autolevelDistance = DatabaseV2.ALDISTANCE.getsaved();
         double areaWidth    = DatabaseV2.WORKSPACE0.getsaved(); //x
         double areaHeight   = DatabaseV2.WORKSPACE1.getsaved(); //y
-        Rectangle rect      = Geometrics.placeRectangle(jpw, jph, Geometrics.getRatio(areaWidth,areaHeight));
-        double scalex       = rect.width / areaWidth;
-        double scaley       = rect.height / areaHeight;
+        Rectangle rect      = Geometrics.placeRectangle(paintableWidth, paintableHeight, Geometrics.getRatio(areaWidth,areaHeight));
+        double scaleX       = rect.width / areaWidth;
+        double scaleY       = rect.height / areaHeight;
 
         double max  = -Double.MAX_VALUE;
         double min  =  Double.MAX_VALUE;
@@ -54,8 +54,8 @@ public class AutoLevelPainter {
         {
             for (int y = 0; y < cy; y++)
             {
-                Point2D p = trans.transform(new Point2D.Double((double)rect.x + (x + 0.5) * w,
-                                                               (double)rect.y + (y + 0.5) * h),
+                Point2D p = trans.transform(new Point2D.Double((double)rect.x + ((double)x + 0.5) * w,
+                                                               (double)rect.y + ((double)y + 0.5) * h),
                                                                 null);
                 double z        =   al.getdZ(p);
                 double relative =   (z - min)/delta;
@@ -68,13 +68,20 @@ public class AutoLevelPainter {
                             (int)Math.ceil(h));
             }
         }
+        
+        return new Point2D.Double(min, max);
+    }
+    
+    private static void paintScale( Graphics2D g2, Rectangle rect, int boardAreaWidth, double min, double max ) {
 
-        //Paint scale:
+        double delta = max - min;
+
         Font font = new Font(Font.SANS_SERIF, Font.PLAIN, 16);
         g2.setFont(font);
         int zh      = (int)(font.getStringBounds(Tools.dtostr(100.0), g2.getFontRenderContext()).getHeight()) + 10;                    
         int elements= rect.height / zh;
         int dy      = (rect.height - elements * zh) / 2;
+        
         for (int i = 0; i < elements && elements >= 2; i++)
         {
             double z = max - i * (delta / (elements - 1));
@@ -83,27 +90,25 @@ public class AutoLevelPainter {
 
             Color c = ColorHelper.numberToColorPercentage(relative);
             g2.setColor(c);
-            g2.fillRect(jpw + 5,
+            g2.fillRect(boardAreaWidth + 5,
                         dy + zh * i,
                         90,
                         zh - 4);
             g2.setColor(((299 * c.getRed() + 587 * c.getGreen() + 114 * c.getBlue())> 128000) ? Color.black:Color.white);
-            g2.drawString(Tools.dtostr(z), jpw + 10, dy + zh * i + zh - 10);
+            g2.drawString(Tools.dtostr(z), boardAreaWidth + 10, dy + zh * i + zh - 10);
             g2.setColor(Color.black);
-            g2.drawRect(jpw + 5,
+            g2.drawRect(boardAreaWidth + 5,
                         dy + zh * i,
                         90,
                         zh - 4);
         }
 
-        g2.translate(rect.x, rect.y);
-        g2.scale(scalex, scaley);
     }
     
     private static void paintProgressPoints(AutoLevelSystem.Point[] points, Graphics2D g2) {
 
         double autolevelDistance = DatabaseV2.ALDISTANCE.getsaved();
-        double d = Math.min(autolevelDistance/10, 10);
+        double d = Math.min(autolevelDistance/10.0, 10.0);
 
         for (AutoLevelSystem.Point p:points)
         {
@@ -116,13 +121,13 @@ public class AutoLevelPainter {
                 g2.setColor(Color.black);
             }
 
-            g2.fill(new Ellipse2D.Double(p.getPoint().x - d / 2, p.getPoint().y - d / 2, d, d));
+            g2.fill(new Ellipse2D.Double((double)(p.getPoint().x) - d / 2.0, (double)(p.getPoint().y) - d / 2.0, d, d));
 
         }
     }
     
-    private static void scaleForStartCorner(int jpw, int jph, Graphics2D g2) {
-        g2.translate(jpw / 2, jph / 2);
+    private static void scaleForStartCorner(int paintableWidth, int paintableHeight, Graphics2D g2) {
+        g2.translate(paintableWidth / 2, paintableHeight / 2);
         switch (DatabaseV2.EHoming.get()) 
         {
             case UPPER_LEFT:
@@ -139,15 +144,15 @@ public class AutoLevelPainter {
                 g2.scale(-1,-1);
                 break;
         }
-        g2.translate(-jpw / 2, -jph / 2);
+        g2.translate(-paintableWidth / 2, -paintableHeight / 2);
     }
     
-    public static BufferedImage paint(AutoLevelSystem al, int jpw, int jph, AffineTransform trans) {
+    public static BufferedImage paint(AutoLevelSystem al, int paintableWidth, int paintableHeight, AffineTransform trans) {
 
-        jpw = Tools.adjustInt(jpw, 1, Integer.MAX_VALUE);
-        jph = Tools.adjustInt(jph, 1, Integer.MAX_VALUE);
+        paintableWidth = Tools.adjustInt(paintableWidth, 1, Integer.MAX_VALUE);
+        paintableHeight = Tools.adjustInt(paintableHeight, 1, Integer.MAX_VALUE);
 
-        BufferedImage image = new BufferedImage(jpw, jph, BufferedImage.TYPE_4BYTE_ABGR);
+        BufferedImage image = new BufferedImage(paintableWidth, paintableHeight, BufferedImage.TYPE_4BYTE_ABGR);
 
         Graphics2D g2 = image.createGraphics();
 
@@ -157,24 +162,21 @@ public class AutoLevelPainter {
         //Scalling transforming ...
         if(AutoLevelSystem.leveled())
         {
-            jpw -= 100;
+            paintableWidth -= 100;
         }
 
-        scaleForStartCorner(jpw, jph, g2);
+        scaleForStartCorner(paintableWidth, paintableHeight, g2);
 
         //Display Position
         double areaWidth    = DatabaseV2.WORKSPACE0.getsaved(); //x
         double areaHeight   = DatabaseV2.WORKSPACE1.getsaved(); //y
-        Rectangle rect      = Geometrics.placeRectangle(jpw, jph, Geometrics.getRatio(areaWidth,areaHeight));
-        double scalex       = rect.width / areaWidth;
-        double scaley       = rect.height / areaHeight;
+        Rectangle rect      = Geometrics.placeRectangle(paintableWidth, paintableHeight, Geometrics.getRatio(areaWidth, areaHeight));
+
+        double scaleX       = rect.width / areaWidth;
+        double scaleY       = rect.height / areaHeight;
         
         g2.translate(rect.x, rect.y);
-        g2.scale(scalex, scaley);
-
-        //Draw base
-        g2.setColor(new Color(Integer.parseInt(DatabaseV2.CBACKGROUND.get())));
-        g2.fill(new Rectangle2D.Double(0, 0, areaWidth, areaHeight));
+        g2.scale(scaleX, scaleY);
 
         try {
             AffineTransform t = g2.getTransform();
@@ -185,10 +187,18 @@ public class AutoLevelPainter {
             trans.setTransform(new AffineTransform());
         }
 
+        //Draw base
+        g2.setColor(new Color(Integer.parseInt(DatabaseV2.CBACKGROUND.get())));
+        g2.fill(new Rectangle2D.Double(0, 0, areaWidth, areaHeight));
+
 
         if (AutoLevelSystem.leveled())
         {
-            paintHeatmap(al, jpw, jph, trans, g2);
+            Point2D.Double extent = paintHeatmap(al, paintableWidth, paintableHeight, trans, g2);
+            paintScale( g2, rect, paintableWidth, extent.x, extent.y );
+            
+            g2.translate(rect.x, rect.y);
+            g2.scale(scaleX, scaleY);
         }
         else
         {
@@ -201,15 +211,15 @@ public class AutoLevelPainter {
         if (gridDistance > 0) {
             g2.setColor(new Color(Integer.parseInt(DatabaseV2.CGRID.get())));
 
-            g2.setStroke(new BasicStroke((float)(1/scalex)));
+            g2.setStroke(new BasicStroke((float)(1.0/scaleX)));
             for (int x=1; x<areaWidth/gridDistance; x++) {
-                Shape l = new Line2D.Double(x * gridDistance, 0, x * gridDistance, areaHeight);
+                Shape l = new Line2D.Double((double)x * gridDistance, 0.0, (double)x * gridDistance, areaHeight);
                 g2.draw(l);
             }
 
-            g2.setStroke(new BasicStroke((float)(1/scaley)));
+            g2.setStroke(new BasicStroke((float)(1.0/scaleY)));
             for (int y=1; y<areaHeight/gridDistance; y++) {
-                Shape l = new Line2D.Double(0, (y * gridDistance), areaWidth, (y * gridDistance));
+                Shape l = new Line2D.Double(0.0, ((double)y * gridDistance), areaWidth, ((double)y * gridDistance));
                 g2.draw(l);
             }
         }
