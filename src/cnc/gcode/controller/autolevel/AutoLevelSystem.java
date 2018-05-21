@@ -88,8 +88,7 @@ public class AutoLevelSystem implements java.io.Serializable{
         {
             distanceY = 0;
         }
-        System.out.println("distanceX = "+distanceX);
-        System.out.println("distanceY = "+distanceY);
+
         points  = new Point[countX + 1][countY + 1];
         pos     = new Rectangle2D.Double(startX, startY, distanceX, distanceY);
         

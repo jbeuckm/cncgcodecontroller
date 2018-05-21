@@ -710,14 +710,17 @@ public enum Communication {
     private static synchronized void receive(String[] lines) {
         //remove emty lines
         ArrayList<String> l= new ArrayList<>();
-        for(String s:lines)
-            if(!s.equals(""))
+        for(String s:lines) {
+            if(!s.equals("")) {
                 l.add(s);
+            }
+        }
         lines=l.toArray(new String[0]);
         
         doResiveEvent(lines);
         
-        for(String line:lines){
+        for (String line:lines) {
+            
             try {
                 I().internal_receive(line);
             } catch (MyException ex) {

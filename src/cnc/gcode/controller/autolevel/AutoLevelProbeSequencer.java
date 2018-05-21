@@ -15,9 +15,7 @@ import cnc.gcode.controller.communication.Communication;
 import java.awt.geom.Point2D;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Random;
-import javax.swing.JOptionPane;
 
 /**
  *
@@ -214,17 +212,16 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
 
             if (Arrays.asList(cmdpropeindex).contains(i))
             {
+                Communication.send("G30");
+                
                 //Probing Done waiting for hit:
                 if (Communication.isSimulation() == false)
                 {
-                    Communication.send("G30");
                     waitForTrigger(1000 * 60 * 10); //10min max
                 }
                 else {
                     waitForTrigger(10);
-                    hitvalue    = (new Random()).nextDouble();
-                    hit         = true; 
-                    pos         = true;
+                    zEndstopHit(0);
                 }
 
                 if (hit == false)
@@ -247,6 +244,10 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
 
                 if (Communication.isSimulation() == false) {
                     waitForTrigger(1000); //1s max
+                } else {
+                    double zPosition = (new Random()).nextDouble();
+                    double[] positionReport = { 0, 0, zPosition };
+                    addLocationString(positionReport);
                 }
 
                 if (pos == false)
@@ -277,7 +278,7 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
                 while (true){
                     waitForNextSend();
                     try {
-                        String clearance = Tools.dtostr(thitValue+DatabaseV2.ALCLEARANCE.getsaved());
+                        String clearance = Tools.dtostr(thitValue + DatabaseV2.ALCLEARANCE.getsaved());
                         Communication.send("G0 Z" + clearance + " F" + DatabaseV2.GOFEEDRATE);
                     }
                     catch (ComInterruptException ex)

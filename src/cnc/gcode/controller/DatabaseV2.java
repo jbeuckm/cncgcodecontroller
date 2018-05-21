@@ -51,10 +51,10 @@ public enum DatabaseV2 {
     
     //Autoleveling
     ALZERO(Tools.dtostr(0.0)),
-    ALMAXPROBDEPTH(Tools.dtostr(-1.0)), 
-    ALSAVEHEIGHT(Tools.dtostr(10.0)),
-    ALCLEARANCE(Tools.dtostr(10.0)),
-    ALFEEDRATE(Tools.dtostr(10.0)),
+    ALMAXPROBDEPTH(Tools.dtostr(-5.0)), 
+    ALSAVEHEIGHT(Tools.dtostr(5.0)),
+    ALCLEARANCE(Tools.dtostr(3.0)),
+    ALFEEDRATE(Tools.dtostr(25.0)),
     ALDISTANCE(Tools.dtostr(10.0)),
     ALMAXMOVELENGTH(Tools.dtostr(1.0)), 
     ALUSEOUTSIDEPROBEAREA(EOnOff.OFF.name()), 
@@ -86,7 +86,7 @@ public enum DatabaseV2 {
     ARTSETTINGS((new ArtSettings()).toString()),
     ;
     
-    enum EHoming{
+    public enum EHoming{
        //Homing Point 0= upper left; 1= upper right; 2= lower left; 3= lower right;
         UPPER_LEFT,
         UPPER_RIGHT,
@@ -107,7 +107,7 @@ public enum DatabaseV2 {
         }
     }
     
-    enum EOnOff{
+    public enum EOnOff{
         ON,
         OFF;
         
