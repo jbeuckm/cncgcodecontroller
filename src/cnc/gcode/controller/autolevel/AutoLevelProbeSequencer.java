@@ -234,7 +234,7 @@ public abstract class AutoLevelProbeSequencer extends MySwingWorker<String,Objec
                 {
                     waitForNextSend();
                     try {
-                        Communication.send(Communication.getredPostionCommand());
+                        Communication.send(Communication.getReadPostionCommand());
                     }
                     catch (ComInterruptException ex){
                         continue;

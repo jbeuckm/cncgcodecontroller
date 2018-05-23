@@ -227,7 +227,7 @@ public enum Communication {
         }
 
         @Override
-        protected String internal_getredPostionCommand(){
+        protected String internal_getReadPostionCommand(){
             return "M114";
         }
 
@@ -328,7 +328,7 @@ public enum Communication {
         }
 
         @Override
-        protected String internal_getredPostionCommand(){
+        protected String internal_getReadPostionCommand(){
             return "M114";
         }
 
@@ -506,7 +506,7 @@ public enum Communication {
         }
         
         @Override
-        protected String internal_getredPostionCommand(){
+        protected String internal_getReadPostionCommand(){
             return "?";
         }
 
@@ -530,7 +530,7 @@ public enum Communication {
     abstract boolean internal_isbusy();          //Return if busy
     abstract boolean internal_isConnected();     //Returns if Connected
     abstract String internal_getHomingCommand();  
-    abstract String internal_getredPostionCommand();  
+    abstract String internal_getReadPostionCommand();  
     abstract String internal_getProbeCommand();  
 
   
@@ -827,8 +827,8 @@ public enum Communication {
         return I().internal_getHomingCommand();
     }
 
-    public static String getredPostionCommand(){
-        return I().internal_getredPostionCommand();
+    public static String getReadPostionCommand(){
+        return I().internal_getReadPostionCommand();
     }
 
     public static String getProbeCommand() {

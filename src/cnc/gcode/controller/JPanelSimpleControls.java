@@ -8,7 +8,6 @@ package cnc.gcode.controller;
 import cnc.gcode.controller.communication.Communication;
 import cnc.gcode.controller.communication.IReceivedLines;
 import java.text.DecimalFormat;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.logging.Level;
@@ -948,31 +947,31 @@ public class JPanelSimpleControls extends javax.swing.JPanel implements IGUIEven
         if(sender.equals(HomeAll)){
                 ExecuteActions(new ArrayList<String>()    {{
                                                         this.add(Communication.getdoHomingCommand());
-                                                        this.add(Communication.getredPostionCommand());
+                                                        this.add(Communication.getReadPostionCommand());
                                                     }});           
         }
         else if (sender.equals(HomeX)){
                 ExecuteActions(new ArrayList<String>()    {{
                                                         this.add("G28 X");
-                                                        this.add(Communication.getredPostionCommand());
+                                                        this.add(Communication.getReadPostionCommand());
                                                     }});              
         }
         else if (sender.equals(HomeY)){
                 ExecuteActions(new ArrayList<String>()    {{
                                                         this.add("G28 Y");
-                                                        this.add(Communication.getredPostionCommand());
+                                                        this.add(Communication.getReadPostionCommand());
                                                     }});              
         }
         else if (sender.equals(HomeZ) || sender.equals(HomeZ2)){
                 ExecuteActions(new ArrayList<String>()    {{
                                                         this.add("G28 Z");
-                                                        this.add(Communication.getredPostionCommand());
+                                                        this.add(Communication.getReadPostionCommand());
                                                     }});              
         }
         else if (sender.equals(HomeXY)){
                 ExecuteActions(new ArrayList<String>()    {{
                                                         this.add("G28 X Y");
-                                                        this.add(Communication.getredPostionCommand());
+                                                        this.add(Communication.getReadPostionCommand());
                                                     }});              
         }
         else if (sender.equals(MotorsOn)){
@@ -1074,7 +1073,7 @@ public class JPanelSimpleControls extends javax.swing.JPanel implements IGUIEven
                                                 this.add("G91");
                                                 this.add("G0 " + axis.toString() + new DecimalFormat("#.##").format(distance).replace(",", ".") +  " F" + DatabaseV2.MAXFEEDRATE.get());
                                                 this.add("G90");
-                                                this.add(Communication.getredPostionCommand());
+                                                this.add(Communication.getReadPostionCommand());
                                             }});          
     }
     
